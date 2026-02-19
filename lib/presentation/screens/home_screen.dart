@@ -142,6 +142,8 @@ class _MainContent extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
+          if (provider.isRecomputing)
+            const LinearProgressIndicator(),
           // PCA plots row — square aspect ratio per scientific convention
           Expanded(
             child: LayoutBuilder(
