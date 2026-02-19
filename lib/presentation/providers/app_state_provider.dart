@@ -25,7 +25,7 @@ class AppStateProvider extends ChangeNotifier {
   String get mode => _mode;
   void setMode(String value) {
     _mode = value;
-    notifyListeners();
+    _recompute();
   }
 
   // --- SETTINGS section ---
@@ -35,7 +35,7 @@ class AppStateProvider extends ChangeNotifier {
   String get modelType => _modelType;
   void setModelType(String value) {
     _modelType = value;
-    notifyListeners();
+    _recompute();
   }
 
   // Reference batch dropdown
@@ -43,7 +43,7 @@ class AppStateProvider extends ChangeNotifier {
   String get referenceBatch => _referenceBatch;
   void setReferenceBatch(String value) {
     _referenceBatch = value;
-    notifyListeners();
+    _recompute();
   }
 
   // Save model toggle
@@ -103,6 +103,33 @@ class AppStateProvider extends ChangeNotifier {
     } catch (e) {
       _error = _formatError(e);
       _statusMessage = _error!;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Recompute the correction with current settings.
+  Future<void> _recompute() async {
+    _isLoading = true;
+    _error = null;
+    _hasSaved = false;
+    _statusMessage = 'Computing correction...';
+    notifyListeners();
+
+    try {
+      _correctionResult = await _dataService.computeCorrection(
+        modelType: _modelType,
+        referenceBatch: _referenceBatch,
+        mode: _mode,
+      );
+      _isComputed = true;
+      _statusMessage = 'Review the PCA plot, then click Done to save';
+    } catch (e) {
+      _error = _formatError(e);
+      _statusMessage = _error!;
+      _correctionResult = null;
+      _isComputed = false;
     } finally {
       _isLoading = false;
       notifyListeners();
