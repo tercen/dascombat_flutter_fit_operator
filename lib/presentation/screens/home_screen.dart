@@ -140,64 +140,48 @@ class _MainContent extends StatelessWidget {
     return Container(
       color: bgColor,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Stack(
+      child: Column(
         children: [
-          // Main content — stays in place during recompute
-          Opacity(
-            opacity: provider.isRecomputing ? 0.5 : 1.0,
-            child: Column(
-              children: [
-                // PCA plots row — square aspect ratio per scientific convention
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Each plot gets half the width minus spacing
-                      final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
-                      // Square: height = width, but don't exceed available height
-                      final plotSize = math.min(plotWidth, constraints.maxHeight);
-                      return Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: plotSize,
-                              height: plotSize,
-                              child: _PcaScatterPlot(
-                                title: 'Before',
-                                pcaResult: result.before,
-                                batchLabels: result.batchLabels,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            SizedBox(
-                              width: plotSize,
-                              height: plotSize,
-                              child: _PcaScatterPlot(
-                                title: 'After',
-                                pcaResult: result.after,
-                                batchLabels: result.batchLabels,
-                              ),
-                            ),
-                          ],
+          // PCA plots row — square aspect ratio per scientific convention
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Each plot gets half the width minus spacing
+                final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
+                // Square: height = width, but don't exceed available height
+                final plotSize = math.min(plotWidth, constraints.maxHeight);
+                return Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: plotSize,
+                        height: plotSize,
+                        child: _PcaScatterPlot(
+                          title: 'Before',
+                          pcaResult: result.before,
+                          batchLabels: result.batchLabels,
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(
+                        width: plotSize,
+                        height: plotSize,
+                        child: _PcaScatterPlot(
+                          title: 'After',
+                          pcaResult: result.after,
+                          batchLabels: result.batchLabels,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                // Shared color legend
-                _BatchLegend(batchLabels: result.batchLabels, isDark: isDark),
-              ],
+                );
+              },
             ),
           ),
-          // Thin progress bar overlaid at top during recompute
-          if (provider.isRecomputing)
-            const Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              child: LinearProgressIndicator(),
-            ),
+          const SizedBox(height: AppSpacing.md),
+          // Shared color legend
+          _BatchLegend(batchLabels: result.batchLabels, isDark: isDark),
         ],
       ),
     );

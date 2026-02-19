@@ -15,11 +15,9 @@ class AppStateProvider extends ChangeNotifier {
 
   // --- Data loading state ---
   bool _isLoading = false;
-  bool _isRecomputing = false;
   String? _error;
 
   bool get isLoading => _isLoading;
-  bool get isRecomputing => _isRecomputing;
   String? get error => _error;
 
   // --- MODE section: Segmented button ---
@@ -112,12 +110,10 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   /// Recompute the correction with current settings.
-  /// Keeps the existing plot visible while recomputing.
+  /// No loading indicator — plots stay fully visible and update in place.
   Future<void> _recompute() async {
-    _isRecomputing = true;
     _error = null;
     _hasSaved = false;
-    notifyListeners();
 
     try {
       _correctionResult = await _dataService.computeCorrection(
@@ -133,7 +129,6 @@ class AppStateProvider extends ChangeNotifier {
       _correctionResult = null;
       _isComputed = false;
     } finally {
-      _isRecomputing = false;
       notifyListeners();
     }
   }
