@@ -257,37 +257,18 @@ class TercenDataService implements DataService {
 
       if (mode == 'Apply Model') {
         // Apply Model mode (FR-03)
+        // Mirrors R: model = get_model_from_name(ctx, ctx$labels[[1]])
         if (raw.labelFactors.isEmpty) {
           throw StateError(
               'No saved model found. Add a model output to the labels zone in the crosstab.');
         }
 
-        // Read the model from labels
         final labelName = raw.labelFactors.first;
         print('DASCombat: reading model from label "$labelName"');
 
-        try {
-          final labelData = await ctx.select(names: [labelName]);
-          String? modelStr;
-          for (final col in labelData.columns) {
-            final values = col.values as List?;
-            if (values != null && values.isNotEmpty) {
-              modelStr = values.first.toString();
-              break;
-            }
-          }
-          if (modelStr == null || modelStr.isEmpty) {
-            throw StateError(
-                'No saved model found. Add a model output to the labels zone in the crosstab.');
-          }
-
-          final model = _CombatModel.fromJson(jsonDecode(modelStr));
-          correctedMatrix = model.apply(raw.matrix, batchVector);
-        } catch (e) {
-          if (e is StateError) rethrow;
-          throw StateError(
-              'No saved model found. Add a model output to the labels zone in the crosstab.');
-        }
+        final modelStr = await _getModelFromLabel(ctx, labelName);
+        final model = _CombatModel.fromJson(jsonDecode(modelStr));
+        correctedMatrix = model.apply(raw.matrix, batchVector);
       } else {
         // Fit Model mode (FR-02)
         final meanOnly = modelType == 'L';
@@ -683,6 +664,105 @@ class TercenDataService implements DataService {
 
   static String _stripNamespace(String name) {
     return name.contains('.') ? name.split('.').last : name;
+  }
+
+  // ============================================================
+  // Model retrieval helpers (mirrors R tim::find_schema_by_factor_name)
+  // ============================================================
+
+  /// Recursively collect all SimpleRelation IDs from a relation tree.
+  static void _visitRelation(Relation relation, void Function(String id) visitor) {
+    if (relation is SimpleRelation) {
+      visitor(relation.id);
+    } else if (relation is CompositeRelation) {
+      _visitRelation(relation.mainRelation, visitor);
+      for (final jop in relation.joinOperators) {
+        _visitRelation(jop.rightRelation, visitor);
+      }
+    } else if (relation is WhereRelation) {
+      _visitRelation(relation.relation, visitor);
+    } else if (relation is RenameRelation) {
+      _visitRelation(relation.relation, visitor);
+    } else if (relation is GatherRelation) {
+      _visitRelation(relation.relation, visitor);
+    } else if (relation is ReferenceRelation) {
+      _visitRelation(relation.relation, visitor);
+    } else if (relation is UnionRelation) {
+      for (final rel in relation.relations) {
+        _visitRelation(rel, visitor);
+      }
+    }
+    // Unknown relation types are silently skipped.
+  }
+
+  /// Find the schema that contains a column with the given [factorName].
+  ///
+  /// Mirrors R's `tim::find_schema_by_factor_name(ctx, factor.name)`.
+  /// Traverses the CubeQuery's relation tree, loads each source schema,
+  /// and returns the one whose columns include [factorName].
+  Future<Schema?> _findSchemaByFactorName(
+    AbstractOperatorContext ctx,
+    String factorName,
+  ) async {
+    final q = await ctx.query;
+    final ids = <String>{};
+    _visitRelation(q.relation, (id) => ids.add(id));
+
+    for (final id in ids) {
+      try {
+        final schema = await ctx.serviceFactory.tableSchemaService.get(id);
+        if (schema.columns.any((col) => col.name == factorName)) {
+          return schema;
+        }
+      } catch (_) {
+        // Schema may not be accessible; skip.
+      }
+    }
+    return null;
+  }
+
+  /// Retrieve the serialized model from the schema that contains [labelName].
+  ///
+  /// Mirrors R's `get_model_from_name(ctx, ctx$labels[[1]])`:
+  ///   1. find_schema_by_factor_name → locate the model schema
+  ///   2. Read `.base64.serialized.r.model` column from that schema
+  Future<String> _getModelFromLabel(
+    AbstractOperatorContext ctx,
+    String labelName,
+  ) async {
+    final schema = await _findSchemaByFactorName(ctx, labelName);
+    if (schema == null) {
+      throw StateError(
+          'No model schema found for label "$labelName". '
+          'Ensure the Fit step saved a model and the model column is mapped to labels.');
+    }
+
+    // The model JSON is stored in '.base64.serialized.r.model'
+    const modelColumnName = '.base64.serialized.r.model';
+    if (!schema.columns.any((col) => col.name == modelColumnName)) {
+      throw StateError(
+          'Model schema found but missing "$modelColumnName" column. '
+          'The model may have been saved in an incompatible format.');
+    }
+
+    final table = await ctx.serviceFactory.tableSchemaService.select(
+      schema.id,
+      schema.columns.map((c) => c.name).toList(),
+      0,
+      schema.nRows,
+    );
+
+    for (final col in table.columns) {
+      if (col.name == modelColumnName) {
+        final values = col.values;
+        if (values is List && values.isNotEmpty) {
+          return values.first.toString();
+        }
+      }
+    }
+
+    throw StateError(
+        'Model schema has "$modelColumnName" column but it is empty.');
   }
 }
 
