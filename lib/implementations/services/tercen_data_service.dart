@@ -468,21 +468,27 @@ class TercenDataService implements DataService {
     modelTable.columns
         .add(AbstractOperatorContext.makeStringColumn(modelColName, [modelJson]));
 
-    // Build OperatorResult with data in tables + model as JoinOperator.
-    // Data goes in result.tables (gets proper TSON normalization via
-    // _normalizeColumnValues). Model goes in result.joinOperators with
-    // empty join keys (matches R's as_join_operator(list(), list())).
-    final result = OperatorResult();
-    result.tables.add(dataTable);
+    // Both data and model must be JoinOperators (server ignores result.tables
+    // when result.joinOperators is present). Matches R's save_relation() pattern.
 
+    // Data JoinOperator: .ci/.ri join pair columns
+    final dataRel = InMemoryRelation();
+    dataRel.inMemoryTable = dataTable;
+    final dataJop = JoinOperator();
+    final dataPair = ColumnPair();
+    dataPair.lColumns.addAll(['.ci', '.ri']);
+    dataPair.rColumns.addAll(['.ci', '.ri']);
+    dataJop.leftPair = dataPair;
+    dataJop.rightRelation = dataRel;
+
+    // Model JoinOperator: empty join keys (as_join_operator(list(), list()))
     final modelRel = InMemoryRelation();
     modelRel.inMemoryTable = modelTable;
     final modelJop = JoinOperator();
     modelJop.rightRelation = modelRel;
-    result.joinOperators.add(modelJop);
 
-    print('DASCombat: saving data table + model JoinOperator via save()');
-    await ctx.save(result);
+    print('DASCombat: saving 2 JoinOperators (data + model) via saveRelation');
+    await ctx.saveRelation([dataJop, modelJop]);
     await ctx.progress('Saved', actual: 100, total: 100);
     await ctx.log('Save with model completed');
     print('DASCombat: save with model completed');

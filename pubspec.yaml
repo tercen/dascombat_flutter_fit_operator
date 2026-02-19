@@ -34,6 +34,16 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
+# Local overrides to fix TSON serialization for saveRelation (JoinOperators).
+# Patches: ColumnPair.toJson() lColumns/rColumns, _normalizeColumnValues for JoinOperator tables.
+dependency_overrides:
+  sci_tercen_context:
+    path: ../sci_tercen_client/sci_tercen_context
+  sci_tercen_client:
+    path: ../sci_tercen_client/sci_tercen_client
+  sci_tercen_model:
+    path: ../sci_tercen_client/sci_tercen_model
+
 flutter:
   uses-material-design: true
   assets:
