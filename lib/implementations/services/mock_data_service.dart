@@ -121,9 +121,9 @@ class MockDataService implements DataService {
       (s) => List.generate(numPeptides, (p) => samplesMatrix[s][p] - means[p]),
     );
 
-    // Compute covariance matrix (numPeptides x numPeptides would be huge).
-    // Instead, compute the small covariance: samples x samples (24 x 24).
-    // C = centered * centered^T / (n-1)
+    // Compute Gram matrix G = X * X' (samples x samples).
+    // Using Gram matrix (not covariance X*X'/(n-1)) so that scores
+    // u * sqrt(eigenvalue) give correct PC scores matching R's prcomp().
     final cov = List.generate(numSamples, (_) => List.filled(numSamples, 0.0));
     for (var i = 0; i < numSamples; i++) {
       for (var j = i; j < numSamples; j++) {
@@ -131,7 +131,6 @@ class MockDataService implements DataService {
         for (var p = 0; p < numPeptides; p++) {
           dot += centered[i][p] * centered[j][p];
         }
-        dot /= (numSamples - 1);
         cov[i][j] = dot;
         cov[j][i] = dot;
       }

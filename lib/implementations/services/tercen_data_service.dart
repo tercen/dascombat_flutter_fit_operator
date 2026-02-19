@@ -552,7 +552,9 @@ class TercenDataService implements DataService {
       (s) => List.generate(numPeptides, (p) => samplesMatrix[s][p] - means[p]),
     );
 
-    // Compute small covariance matrix (samples x samples)
+    // Compute Gram matrix G = X * X' (samples x samples).
+    // Using Gram matrix (not covariance X*X'/(n-1)) so that scores
+    // u * sqrt(eigenvalue) give correct PC scores matching R's prcomp().
     final cov = List.generate(numSamples, (_) => List.filled(numSamples, 0.0));
     for (var i = 0; i < numSamples; i++) {
       for (var j = i; j < numSamples; j++) {
@@ -560,7 +562,6 @@ class TercenDataService implements DataService {
         for (var p = 0; p < numPeptides; p++) {
           dot += centered[i][p] * centered[j][p];
         }
-        dot /= (numSamples - 1);
         cov[i][j] = dot;
         cov[j][i] = dot;
       }
@@ -1038,9 +1039,9 @@ class _CombatModel {
         for (int g = 0; g < nGenes; g++) {
           // batch.design[j,] %*% gamma.star for this batch
           // Since batchDesign is one-hot, this simplifies to gammaStarResult[i][g]
-          bayesdata[g][j] =
-              (bayesdata[g][j] - gammaStarResult[i][g]) /
-              sqrt(deltaStarResult[i][g]);
+          // Note: matches R pgcombat.R which only subtracts gamma.star
+          // without dividing by sqrt(delta.star) in the adjustment step.
+          bayesdata[g][j] = bayesdata[g][j] - gammaStarResult[i][g];
         }
       }
     }
