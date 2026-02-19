@@ -1,0 +1,40 @@
+name: dascombat_flutter_fit_operator
+description: DASCombat fit visualization operator
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+  get_it: ^8.0.3
+  shared_preferences: ^2.2.2
+  font_awesome_flutter: ^10.8.0
+  csv: ^6.0.0
+  web: ^0.5.1
+  # Tercen context API — required for Phase 3 (real data integration)
+  # Provides R/Python-style ctx object: ctx.select(), ctx.cselect(), ctx.rselect()
+  # Always use the latest version tag from https://github.com/tercen/sci_tercen_client
+  sci_tercen_context:
+    git:
+      url: https://github.com/tercen/sci_tercen_client
+      ref: 1.13.0
+      path: sci_tercen_context
+  sci_tercen_client:
+    git:
+      url: https://github.com/tercen/sci_tercen_client
+      ref: 1.13.0
+      path: sci_tercen_client
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/

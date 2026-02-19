@@ -1,0 +1,11 @@
+{
+  "name": "DASCombat Fit",
+  "description": "DASCombat fit visualization operator",
+  "isWebApp": true,
+  "isViewOnly": false,
+  "entryType": "app",
+  "serve": "build/web",
+  "tags": [],
+  "authors": ["tercen"],
+  "urls": ["https://github.com/tercen/dascombat_flutter_fit_operator"]
+}
