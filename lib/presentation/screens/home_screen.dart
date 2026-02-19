@@ -92,9 +92,10 @@ class _MainContent extends StatelessWidget {
               builder: (context, constraints) {
                 final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
                 final plotSize = math.min(plotWidth, constraints.maxHeight);
-                return Center(
+                return Align(
+                  alignment: Alignment.topCenter,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
                         width: plotSize,
