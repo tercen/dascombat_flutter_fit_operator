@@ -25,7 +25,6 @@ class AppStateProvider extends ChangeNotifier {
   String get mode => _mode;
   void setMode(String value) {
     _mode = value;
-    notifyListeners();
     _recompute();
   }
 
@@ -36,7 +35,6 @@ class AppStateProvider extends ChangeNotifier {
   String get modelType => _modelType;
   void setModelType(String value) {
     _modelType = value;
-    notifyListeners();
     _recompute();
   }
 
@@ -45,7 +43,6 @@ class AppStateProvider extends ChangeNotifier {
   String get referenceBatch => _referenceBatch;
   void setReferenceBatch(String value) {
     _referenceBatch = value;
-    notifyListeners();
     _recompute();
   }
 
@@ -113,13 +110,9 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   /// Recompute the correction with current settings.
-  /// Yields to the UI thread first so controls update before computation.
   Future<void> _recompute() async {
     _error = null;
     _hasSaved = false;
-
-    // Let the UI frame complete (update dropdowns) before heavy computation
-    await Future.delayed(Duration.zero);
 
     try {
       _correctionResult = await _dataService.computeCorrection(
