@@ -468,8 +468,25 @@ class TercenDataService implements DataService {
     modelTable.columns
         .add(AbstractOperatorContext.makeStringColumn(modelColName, [modelJson]));
 
-    print('DASCombat: saving 2 tables (data + model)');
-    await ctx.saveTables([dataTable, modelTable]);
+    // Wrap data table as JoinOperator with .ri/.ci join keys
+    final dataRel = InMemoryRelation();
+    dataRel.inMemoryTable = dataTable;
+    final dataJop = JoinOperator();
+    final dataPair = ColumnPair();
+    dataPair.lColumns.addAll(['.ci', '.ri']);
+    dataPair.rColumns.addAll(['.ci', '.ri']);
+    dataJop.leftPair = dataPair;
+    dataJop.rightRelation = dataRel;
+
+    // Wrap model table as JoinOperator with empty join keys
+    // (matches R's as_join_operator(list(), list()))
+    final modelRel = InMemoryRelation();
+    modelRel.inMemoryTable = modelTable;
+    final modelJop = JoinOperator();
+    modelJop.rightRelation = modelRel;
+
+    print('DASCombat: saving 2 relations (data + model) via saveRelation');
+    await ctx.saveRelation([dataJop, modelJop]);
     await ctx.progress('Saved', actual: 100, total: 100);
     await ctx.log('Save with model completed');
     print('DASCombat: save with model completed');
