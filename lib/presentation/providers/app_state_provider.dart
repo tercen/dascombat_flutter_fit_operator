@@ -14,7 +14,8 @@ class AppStateProvider extends ChangeNotifier {
       : _dataService = dataService ?? serviceLocator<DataService>();
 
   // --- Data loading state ---
-  bool _isLoading = false;
+  // Start true so the first frame shows the spinner (loadData is called immediately).
+  bool _isLoading = true;
   String? _error;
 
   bool get isLoading => _isLoading;

@@ -79,109 +79,97 @@ class _MainContent extends StatelessWidget {
     final textColor = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
     final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
     final errorColor = isDark ? AppColorsDark.error : AppColors.error;
-
-    if (provider.isLoading) {
-      return Container(
-        color: bgColor,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                provider.statusMessage,
-                style: AppTextStyles.body.copyWith(color: textColor),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (provider.error != null) {
-      return Container(
-        color: bgColor,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: errorColor),
-              const SizedBox(height: AppSpacing.md),
-              Text('Error', style: AppTextStyles.h3.copyWith(color: textPrimary)),
-              const SizedBox(height: AppSpacing.sm),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                child: Text(
-                  provider.error!,
-                  style: AppTextStyles.body.copyWith(color: textColor),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     final result = provider.correctionResult;
-    if (result == null) {
-      return Container(
-        color: bgColor,
-        child: Center(
-          child: Text(
-            'No data available',
-            style: AppTextStyles.body.copyWith(color: textColor),
-          ),
-        ),
-      );
-    }
 
+    // Stable outer structure: Container → padding → Column → Expanded.
+    // Only the *content* inside Expanded changes, so the layout engine
+    // never has to re-measure the outer shell across state transitions.
     return Container(
       color: bgColor,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
-          // PCA plots row — square aspect ratio per scientific convention
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Each plot gets half the width minus spacing
-                final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
-                // Square: height = width, but don't exceed available height
-                final plotSize = math.min(plotWidth, constraints.maxHeight);
-                return Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: plotSize,
-                        height: plotSize,
-                        child: _PcaScatterPlot(
-                          title: 'Before',
-                          pcaResult: result.before,
-                          batchLabels: result.batchLabels,
+            child: provider.isLoading
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          provider.statusMessage,
+                          style: AppTextStyles.body.copyWith(color: textColor),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      SizedBox(
-                        width: plotSize,
-                        height: plotSize,
-                        child: _PcaScatterPlot(
-                          title: 'After',
-                          pcaResult: result.after,
-                          batchLabels: result.batchLabels,
+                      ],
+                    ),
+                  )
+                : provider.error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: errorColor),
+                            const SizedBox(height: AppSpacing.md),
+                            Text('Error', style: AppTextStyles.h3.copyWith(color: textPrimary)),
+                            const SizedBox(height: AppSpacing.sm),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                              child: Text(
+                                provider.error!,
+                                style: AppTextStyles.body.copyWith(color: textColor),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                      )
+                    : result == null
+                        ? Center(
+                            child: Text(
+                              'No data available',
+                              style: AppTextStyles.body.copyWith(color: textColor),
+                            ),
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
+                              final plotSize = math.min(plotWidth, constraints.maxHeight);
+                              return Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: plotSize,
+                                      height: plotSize,
+                                      child: _PcaScatterPlot(
+                                        title: 'Before',
+                                        pcaResult: result.before,
+                                        batchLabels: result.batchLabels,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.md),
+                                    SizedBox(
+                                      width: plotSize,
+                                      height: plotSize,
+                                      child: _PcaScatterPlot(
+                                        title: 'After',
+                                        pcaResult: result.after,
+                                        batchLabels: result.batchLabels,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
           ),
+          // Always reserve space for legend row to prevent layout shift
           const SizedBox(height: AppSpacing.md),
-          // Shared color legend
-          _BatchLegend(batchLabels: result.batchLabels, isDark: isDark),
+          if (result != null)
+            _BatchLegend(batchLabels: result.batchLabels, isDark: isDark)
+          else
+            const SizedBox(height: 20), // placeholder height matching legend
         ],
       ),
     );
