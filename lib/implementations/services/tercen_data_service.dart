@@ -456,39 +456,24 @@ class TercenDataService implements DataService {
     dataTable.columns
         .add(AbstractOperatorContext.makeFloat64Column(valueName, outValues));
 
-    // Table 2: model (single row with serialized model)
+    // Table 2: model (single row with serialized model + .ri/.ci)
     final modelColName =
         nsMap['.base64.serialized.r.model'] ?? '.base64.serialized.r.model';
     final modelLabelName = nsMap['model'] ?? 'model';
 
     final modelTable = Table();
     modelTable.nRows = 1;
+    modelTable.columns
+        .add(AbstractOperatorContext.makeInt32Column('.ri', [riOrder[0]]));
+    modelTable.columns
+        .add(AbstractOperatorContext.makeInt32Column('.ci', [ciOrder[0]]));
     modelTable.columns.add(
         AbstractOperatorContext.makeStringColumn(modelLabelName, ['dascombat_model']));
     modelTable.columns
         .add(AbstractOperatorContext.makeStringColumn(modelColName, [modelJson]));
 
-    // Both data and model must be JoinOperators (server ignores result.tables
-    // when result.joinOperators is present). Matches R's save_relation() pattern.
-
-    // Data JoinOperator: .ci/.ri join pair columns
-    final dataRel = InMemoryRelation();
-    dataRel.inMemoryTable = dataTable;
-    final dataJop = JoinOperator();
-    final dataPair = ColumnPair();
-    dataPair.lColumns.addAll(['.ci', '.ri']);
-    dataPair.rColumns.addAll(['.ci', '.ri']);
-    dataJop.leftPair = dataPair;
-    dataJop.rightRelation = dataRel;
-
-    // Model JoinOperator: empty join keys (as_join_operator(list(), list()))
-    final modelRel = InMemoryRelation();
-    modelRel.inMemoryTable = modelTable;
-    final modelJop = JoinOperator();
-    modelJop.rightRelation = modelRel;
-
-    print('DASCombat: saving 2 JoinOperators (data + model) via saveRelation');
-    await ctx.saveRelation([dataJop, modelJop]);
+    print('DASCombat: saving 2 tables (data + model) via saveTables');
+    await ctx.saveTables([dataTable, modelTable]);
     await ctx.progress('Saved', actual: 100, total: 100);
     await ctx.log('Save with model completed');
     print('DASCombat: save with model completed');

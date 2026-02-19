@@ -301,23 +301,29 @@ packages:
   sci_tercen_client:
     dependency: "direct main"
     description:
-      path: "../sci_tercen_client/sci_tercen_client"
-      relative: true
-    source: path
+      path: sci_tercen_client
+      ref: "1.13.0"
+      resolved-ref: f2137c3ee0b2ce032fe58a149a77e8a971234f4a
+      url: "https://github.com/tercen/sci_tercen_client"
+    source: git
     version: "1.13.0"
   sci_tercen_context:
     dependency: "direct main"
     description:
-      path: "../sci_tercen_client/sci_tercen_context"
-      relative: true
-    source: path
+      path: sci_tercen_context
+      ref: "1.13.0"
+      resolved-ref: f2137c3ee0b2ce032fe58a149a77e8a971234f4a
+      url: "https://github.com/tercen/sci_tercen_client"
+    source: git
     version: "1.13.0"
   sci_tercen_model:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      path: "../sci_tercen_client/sci_tercen_model"
-      relative: true
-    source: path
+      path: sci_tercen_model
+      ref: "1.13.0"
+      resolved-ref: f2137c3ee0b2ce032fe58a149a77e8a971234f4a
+      url: "https://github.com/tercen/sci_tercen_client"
+    source: git
     version: "1.13.0"
   shared_preferences:
     dependency: "direct main"
