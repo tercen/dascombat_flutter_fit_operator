@@ -1037,11 +1037,11 @@ class _CombatModel {
     for (int i = 0; i < nBatch; i++) {
       for (final j in batches[i]) {
         for (int g = 0; g < nGenes; g++) {
-          // batch.design[j,] %*% gamma.star for this batch
-          // Since batchDesign is one-hot, this simplifies to gammaStarResult[i][g]
-          // Note: matches R pgcombat.R which only subtracts gamma.star
-          // without dividing by sqrt(delta.star) in the adjustment step.
-          bayesdata[g][j] = bayesdata[g][j] - gammaStarResult[i][g];
+          // (sData - gamma.star) / sqrt(delta.star)
+          // Matches canonical dascombat R package batchcorrect().
+          bayesdata[g][j] =
+              (bayesdata[g][j] - gammaStarResult[i][g]) /
+              sqrt(deltaStarResult[i][g]);
         }
       }
     }
