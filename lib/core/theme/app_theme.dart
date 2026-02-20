@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_colors_dark.dart';
 import 'app_spacing.dart';
+import 'app_text_styles.dart';
 
 /// Material 3 theme configuration for light and dark modes.
 class AppTheme {
@@ -10,6 +11,7 @@ class AppTheme {
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTextStyles.fontFamily,
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
@@ -156,6 +158,7 @@ class AppTheme {
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTextStyles.fontFamily,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
         primary: AppColorsDark.primary,

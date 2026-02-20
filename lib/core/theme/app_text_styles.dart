@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   AppTextStyles._();
 
+  // Font families
+  static const String fontFamily = 'Fira Sans';
+  static const String fontFamilyMono = 'SF Mono';
+
   // Headings
   static const TextStyle h1 = TextStyle(fontSize: 24, fontWeight: FontWeight.w600, height: 1.25);
   static const TextStyle h2 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.25);
