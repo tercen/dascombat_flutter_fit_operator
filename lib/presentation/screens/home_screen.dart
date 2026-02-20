@@ -102,12 +102,13 @@ class _MainContent extends StatelessWidget {
             child: ClipRect(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  // Compute plotSize from WIDTH only — width is rock-stable
-                  // because it comes from the fixed AppShell content area.
-                  // maxHeight can fluctuate during layout settling (font swap,
-                  // legend height) which was the source of the jitter.
-                  final plotSize = ((constraints.maxWidth - AppSpacing.md) / 2)
+                  // Floor both dimensions independently before taking min.
+                  // This absorbs sub-pixel fluctuations in maxHeight during
+                  // layout settling (font swap, legend height).
+                  final widthBased = ((constraints.maxWidth - AppSpacing.md) / 2)
                       .floorToDouble();
+                  final heightBased = constraints.maxHeight.floorToDouble();
+                  final plotSize = math.min(widthBased, heightBased);
                   return Align(
                     alignment: Alignment.topCenter,
                     child: Row(

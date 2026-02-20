@@ -44446,7 +44446,7 @@ A.amd.prototype={
 $1(a){return a.c},
 $S:312}
 A.ame.prototype={
-$2(a,b){var s=this,r=null,q=Math.floor((b.b-16)/2),p=s.a,o=p==null,n=o?r:p.a,m=o?r:p.c,l=s.b,k=s.c,j=s.d
+$2(a,b){var s=this,r=null,q=Math.min(Math.floor((b.b-16)/2),Math.floor(b.d)),p=s.a,o=p==null,n=o?r:p.a,m=o?r:p.c,l=s.b,k=s.c,j=s.d
 m=A.iE(new A.Dk("Before",n,m,l,k,j,r),q,q)
 n=o?r:p.b
 return new A.j2(B.xS,r,r,A.iB(A.h([m,B.KO,A.iE(new A.Dk("After",n,o?r:p.c,l,k,j,r),q,q)],t.p),B.aG,B.cI,0),r)},
