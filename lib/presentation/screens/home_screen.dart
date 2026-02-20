@@ -99,37 +99,50 @@ class _MainContent extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1.0,
-                    child: _PlotBox(
-                      title: 'Before',
-                      pcaResult: result?.before,
-                      batchLabels: result?.batchLabels,
-                      isLoading: isLoading,
-                      error: error,
-                      textColor: textColor,
+            child: ClipRect(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Compute plotSize from WIDTH only — width is rock-stable
+                  // because it comes from the fixed AppShell content area.
+                  // maxHeight can fluctuate during layout settling (font swap,
+                  // legend height) which was the source of the jitter.
+                  final plotSize = ((constraints.maxWidth - AppSpacing.md) / 2)
+                      .floorToDouble();
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: plotSize,
+                          height: plotSize,
+                          child: _PlotBox(
+                            title: 'Before',
+                            pcaResult: result?.before,
+                            batchLabels: result?.batchLabels,
+                            isLoading: isLoading,
+                            error: error,
+                            textColor: textColor,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        SizedBox(
+                          width: plotSize,
+                          height: plotSize,
+                          child: _PlotBox(
+                            title: 'After',
+                            pcaResult: result?.after,
+                            batchLabels: result?.batchLabels,
+                            isLoading: isLoading,
+                            error: error,
+                            textColor: textColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1.0,
-                    child: _PlotBox(
-                      title: 'After',
-                      pcaResult: result?.after,
-                      batchLabels: result?.batchLabels,
-                      isLoading: isLoading,
-                      error: error,
-                      textColor: textColor,
-                    ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
