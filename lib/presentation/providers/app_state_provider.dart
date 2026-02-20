@@ -47,10 +47,8 @@ class AppStateProvider extends ChangeNotifier {
     _recompute();
   }
 
-  // Save model toggle — defaults to true because Fit mode's purpose is
-  // to produce a model.  The user can still turn it off if they only want
-  // corrected values.
-  bool _saveModel = true;
+  // Save model toggle
+  bool _saveModel = false;
   bool get saveModel => _saveModel;
   void setSaveModel(bool value) {
     _saveModel = value;
