@@ -65,6 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+/// Fixed height for the legend row. Prevents layout shift when data arrives
+/// by keeping the Expanded area height constant across loading/data states.
+const double _kLegendHeight = 20.0;
+
 /// Main content: side-by-side PCA scatter plots (Before / After).
 /// The main panel respects the theme (light/dark). Only the graph chart areas
 /// inside force a white background for scientific readability.
@@ -73,66 +77,70 @@ class _MainContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AppStateProvider>();
+    // Scoped selectors — only rebuild when plot-relevant data changes.
+    // Changes to statusMessage, isSaving, hasSaved, etc. are ignored,
+    // eliminating unnecessary rebuilds that contributed to jitter.
+    final result = context.select<AppStateProvider, CorrectionResult?>(
+      (p) => p.correctionResult,
+    );
+    final isLoading = context.select<AppStateProvider, bool>(
+      (p) => p.isLoading,
+    );
+    final error = context.select<AppStateProvider, String?>(
+      (p) => p.error,
+    );
     final isDark = context.watch<ThemeProvider>().isDarkMode;
     final bgColor = isDark ? AppColorsDark.background : AppColors.surface;
     final textColor = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final result = provider.correctionResult;
 
-    // Shiny-style: the LayoutBuilder + two plot boxes are ALWAYS present,
-    // from the very first frame.  Only the *pixels inside* each box change
-    // when data arrives.  Zero layout recalculation, zero jitter.
     return Container(
       color: bgColor,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         children: [
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final plotWidth = (constraints.maxWidth - AppSpacing.md) / 2;
-                final plotSize = math.min(plotWidth, constraints.maxHeight);
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: plotSize,
-                        height: plotSize,
-                        child: _PlotBox(
-                          title: 'Before',
-                          pcaResult: result?.before,
-                          batchLabels: result?.batchLabels,
-                          isLoading: provider.isLoading,
-                          error: provider.error,
-                          textColor: textColor,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      SizedBox(
-                        width: plotSize,
-                        height: plotSize,
-                        child: _PlotBox(
-                          title: 'After',
-                          pcaResult: result?.after,
-                          batchLabels: result?.batchLabels,
-                          isLoading: provider.isLoading,
-                          error: provider.error,
-                          textColor: textColor,
-                        ),
-                      ),
-                    ],
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: 1.0,
+                    child: _PlotBox(
+                      title: 'Before',
+                      pcaResult: result?.before,
+                      batchLabels: result?.batchLabels,
+                      isLoading: isLoading,
+                      error: error,
+                      textColor: textColor,
+                    ),
                   ),
-                );
-              },
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: 1.0,
+                    child: _PlotBox(
+                      title: 'After',
+                      pcaResult: result?.after,
+                      batchLabels: result?.batchLabels,
+                      isLoading: isLoading,
+                      error: error,
+                      textColor: textColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          if (result != null)
-            _BatchLegend(batchLabels: result.batchLabels, isDark: isDark)
-          else
-            const SizedBox(height: 20),
+          // Fixed-height legend: eliminates layout shift when data arrives.
+          // The Expanded area above always sees the same sibling height.
+          SizedBox(
+            height: _kLegendHeight,
+            child: result != null
+                ? _BatchLegend(batchLabels: result.batchLabels, isDark: isDark)
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -168,7 +176,15 @@ class _BatchLegend extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Batch: ', style: AppTextStyles.label.copyWith(color: textColor)),
+        Text(
+          'Batch: ',
+          style: AppTextStyles.label.copyWith(color: textColor),
+          strutStyle: const StrutStyle(
+            fontSize: 12,
+            height: 1.5,
+            forceStrutHeight: true,
+          ),
+        ),
         const SizedBox(width: AppSpacing.sm),
         ...batchLabels.map((batch) {
           return Padding(
@@ -185,7 +201,15 @@ class _BatchLegend extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                Text(batch, style: AppTextStyles.bodySmall.copyWith(color: textColor)),
+                Text(
+                  batch,
+                  style: AppTextStyles.bodySmall.copyWith(color: textColor),
+                  strutStyle: const StrutStyle(
+                    fontSize: 12,
+                    height: 1.5,
+                    forceStrutHeight: true,
+                  ),
+                ),
               ],
             ),
           );
@@ -228,7 +252,15 @@ class _PlotBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(title, style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary)),
+          Text(
+            title,
+            style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+            strutStyle: const StrutStyle(
+              fontSize: 16,
+              height: 1.25,
+              forceStrutHeight: true,
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: pcaResult != null && batchLabels != null
